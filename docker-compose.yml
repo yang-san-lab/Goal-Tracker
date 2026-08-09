@@ -18,6 +18,6 @@ services:
     container_name: goaltracker-frontend
     restart: always
     ports:
-      - "80:80"                   # HTTP
+      - "127.0.0.1:8080:80"       # 仅本机访问，通过服务器 Nginx 对外提供
     depends_on:
       - backend
