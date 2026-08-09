@@ -19,7 +19,6 @@ class TeamJoin(BaseModel):
 class TaskAssign(BaseModel):
     """队长分配任务给成员"""
     assignee_id: str  # 被分配的成员 user_id
-    team_id: str      # 团队 id
 
 
 class AssignmentRespond(BaseModel):
