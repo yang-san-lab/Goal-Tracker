@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.env
+*.db
+
+# Data (Docker volume)
+data/
+
+# Node
+node_modules/
+dist/
+
+# Docker
+docker-compose.override.yml
+
+# IDE
+.vscode/
+.idea/

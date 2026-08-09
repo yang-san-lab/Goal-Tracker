@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    container_name: goaltracker-backend
+    restart: always
+    volumes:
+      - ./data:/app/data          # SQLite 数据库持久化
+      - ./backend/.env:/app/.env  # 环境变量（含 API Key）
+    environment:
+      - DATABASE_URL=sqlite:///./data/goal_tracker.db
+    ports:
+      - "127.0.0.1:8000:8000"    # 仅本地访问，通过 Nginx 代理
+
+  frontend:
+    build: ./frontend
+    container_name: goaltracker-frontend
+    restart: always
+    ports:
+      - "80:80"                   # HTTP
+    depends_on:
+      - backend
