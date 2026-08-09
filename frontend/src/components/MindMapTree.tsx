@@ -190,7 +190,7 @@ export default function MindMapTree({ breakdown, tasks }: Props) {
     return root
   }, [breakdown, taskStatusMap])
 
-  const rootRate = root.total > 0 ? Math.round(root.completed / root.total * 100) : 0
+  const rootRate = tree.total > 0 ? Math.round(tree.completed / tree.total * 100) : 0
 
   return (
     <div className="card">
