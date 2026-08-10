@@ -238,32 +238,31 @@ export default function RewardsPage() {
               required
               maxLength={100}
             />
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <label className="text-xs text-gray-400">所需星星</label>
-                <input
-                  className="input text-sm"
-                  type="tel"
-                  maxLength={5}
-                  value={formCost}
-                  onChange={e => setFormCost(e.target.value.replace(/\D/g, '').slice(0, 5))}
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-400">图标</label>
-                <div className="flex gap-1 mt-1 flex-wrap">
-                  {ICONS.map(icon => (
-                    <button
-                      key={icon}
-                      type="button"
-                      onClick={() => setFormIcon(icon)}
-                      className={`text-lg p-1 rounded-lg ${formIcon === icon ? 'bg-primary-100 ring-2 ring-primary-400' : ''}`}
-                    >
-                      {icon}
-                    </button>
-                  ))}
-                </div>
+            <div>
+              <label className="text-xs text-gray-400">所需星星</label>
+              <input
+                className="input text-lg font-semibold text-center tracking-wider"
+                type="tel"
+                maxLength={5}
+                placeholder="0"
+                value={formCost}
+                onChange={e => setFormCost(e.target.value.replace(/\D/g, '').slice(0, 5))}
+                required
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400">图标</label>
+              <div className="flex gap-1 mt-1 flex-wrap">
+                {ICONS.map(icon => (
+                  <button
+                    key={icon}
+                    type="button"
+                    onClick={() => setFormIcon(icon)}
+                    className={`text-xl p-2 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center ${formIcon === icon ? 'bg-primary-100 ring-2 ring-primary-400' : ''}`}
+                  >
+                    {icon}
+                  </button>
+                ))}
               </div>
             </div>
             <input
