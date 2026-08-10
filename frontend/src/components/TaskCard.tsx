@@ -139,15 +139,11 @@ export default function TaskCard({ task, onCheckin, loading, onUpdateSchedule, s
           {onUpdateSchedule && (
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               <input
-                type="text"
-                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400 w-16"
-                placeholder="HH:MM"
+                type="time"
+                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400"
                 value={task.scheduled_time ?? ''}
                 disabled={scheduleSaving}
-                onChange={e => {
-                  const val = e.target.value
-                  onUpdateSchedule(task.id, val || null, task.reminder_time)
-                }}
+                onChange={e => onUpdateSchedule(task.id, e.target.value || null, task.reminder_time)}
               />
               <select
                 className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400"
