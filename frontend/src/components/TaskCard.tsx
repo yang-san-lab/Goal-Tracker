@@ -5,7 +5,7 @@ interface Props {
   task: Task
   onCheckin: (taskId: string, action: 'completed' | 'delayed' | 'skipped') => void
   loading?: boolean
-  onUpdateSchedule?: (taskId: string, scheduledTime: string | null, reminderMinutes: number | null) => void | Promise<void>
+  onUpdateSchedule?: (taskId: string, scheduledTime: string | null, reminderTime: string | null) => void | Promise<void>
   scheduleSaving?: boolean
 }
 
@@ -143,23 +143,15 @@ export default function TaskCard({ task, onCheckin, loading, onUpdateSchedule, s
                 className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400"
                 value={task.scheduled_time ?? ''}
                 disabled={scheduleSaving}
-                onChange={e => onUpdateSchedule(task.id, e.target.value || null, task.reminder_minutes)}
+                onChange={e => onUpdateSchedule(task.id, e.target.value || null, task.reminder_time)}
               />
-              <select
+              <input
+                type="time"
                 className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400"
-                value={task.reminder_minutes == null ? '' : String(task.reminder_minutes)}
+                value={task.reminder_time ?? ''}
                 disabled={scheduleSaving}
-                onChange={e => onUpdateSchedule(task.id, task.scheduled_time, e.target.value === '' ? null : Number(e.target.value))}
-              >
-                <option value="">不提醒</option>
-                <option value="0">准时提醒</option>
-                <option value="5">提前5分钟</option>
-                <option value="10">提前10分钟</option>
-                <option value="15">提前15分钟</option>
-                <option value="30">提前30分钟</option>
-                <option value="60">提前1小时</option>
-                <option value="120">提前2小时</option>
-              </select>
+                onChange={e => onUpdateSchedule(task.id, task.scheduled_time, e.target.value || null)}
+              />
             </div>
           )}
 

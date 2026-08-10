@@ -103,7 +103,7 @@ def update_task(
             user_id=current_user.id,
             task_id=task_id,
             scheduled_time=data.scheduled_time,
-            reminder_minutes=data.reminder_minutes,
+            reminder_time=data.reminder_time,
         )
         db.commit()
         return TaskResponse.model_validate(task)

@@ -73,11 +73,11 @@ export default function DailyViewPage() {
   const handleUpdateSchedule = async (
     taskId: string,
     scheduledTime: string | null,
-    reminderMinutes: number | null,
+    reminderTime: string | null,
   ) => {
     setScheduleSavingId(taskId)
     try {
-      await updateSchedule(taskId, scheduledTime, reminderMinutes)
+      await updateSchedule(taskId, scheduledTime, reminderTime)
     } catch (err: any) {
       alert('保存时间提醒失败: ' + err.message)
     } finally {

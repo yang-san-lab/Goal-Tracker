@@ -12,17 +12,16 @@ function isReminderEnabled(task: Task): boolean {
   return (
     task.status === 'pending' &&
     !!task.scheduled_time &&
-    task.reminder_minutes != null &&
+    !!task.reminder_time &&
     task.scheduled_date === getToday()
   )
 }
 
 function getReminderTime(task: Task): number | null {
-  if (!task.scheduled_time) return null
+  if (!task.reminder_time) return null
   const [y, m, d] = task.scheduled_date.split('-').map(Number)
-  const [hh, mm] = task.scheduled_time.split(':').map(Number)
-  const scheduled = new Date(y, m - 1, d, hh, mm, 0, 0)
-  return scheduled.getTime() - (task.reminder_minutes ?? 0) * 60_000
+  const [hh, mm] = task.reminder_time.split(':').map(Number)
+  return new Date(y, m - 1, d, hh, mm, 0, 0).getTime()
 }
 
 function showTaskNotification(task: Task) {
@@ -61,6 +60,13 @@ export function clearReminderTimers() {
 
 export function syncTaskReminders(tasks: Task[]) {
   clearReminderTimers()
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready
+      .then(registration => {
+        registration.active?.postMessage({ type: 'SYNC_REMINDERS', tasks })
+      })
+      .catch(() => {})
+  }
   if (!('Notification' in window) || Notification.permission !== 'granted') return
   const now = Date.now()
   for (const task of tasks) {

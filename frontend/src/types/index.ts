@@ -83,6 +83,7 @@ export interface Task {
   completed_at: string | null
   scheduled_time: string | null
   reminder_minutes: number | null
+  reminder_time: string | null
   delayed_reason: string
   user_note: string
   sort_order: number

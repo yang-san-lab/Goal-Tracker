@@ -42,6 +42,8 @@ def _ensure_task_schedule_columns():
             statements.append("ALTER TABLE tasks ADD COLUMN scheduled_time VARCHAR(5)")
         if "reminder_minutes" not in columns:
             statements.append("ALTER TABLE tasks ADD COLUMN reminder_minutes INTEGER")
+        if "reminder_time" not in columns:
+            statements.append("ALTER TABLE tasks ADD COLUMN reminder_time VARCHAR(5)")
         for statement in statements:
             conn.execute(text(statement))
         conn.commit()

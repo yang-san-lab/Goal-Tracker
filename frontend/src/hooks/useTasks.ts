@@ -44,11 +44,11 @@ export function useDailyTasks(date?: string) {
   const updateSchedule = useCallback(async (
     taskId: string,
     scheduledTime: string | null,
-    reminderMinutes: number | null,
+    reminderTime: string | null,
   ) => {
     const updated = await tasksApi.updateTaskSchedule(taskId, {
       scheduled_time: scheduledTime,
-      reminder_minutes: reminderMinutes,
+      reminder_time: reminderTime,
     })
     setData(prev => prev ? {
       ...prev,

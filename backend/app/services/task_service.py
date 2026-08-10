@@ -254,20 +254,24 @@ def update_task_schedule(
     user_id: str,
     task_id: str,
     scheduled_time: Optional[str] = None,
-    reminder_minutes: Optional[int] = None,
+    reminder_time: Optional[str] = None,
 ) -> Task:
     """更新任务的执行时间与提醒设置。"""
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task or not can_act_on_task(task, user_id):
         raise ValueError("任务不存在或无权操作")
 
-    if scheduled_time is not None and not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", scheduled_time):
-        raise ValueError("时间格式应为 HH:MM")
-    if reminder_minutes is not None and (reminder_minutes < 0 or reminder_minutes > 1440):
-        raise ValueError("提醒时间无效")
+    for value, label in ((scheduled_time, "时间"), (reminder_time, "提醒时间")):
+        if value is not None and not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", value):
+            raise ValueError(f"{label}格式应为 HH:MM")
 
     task.scheduled_time = scheduled_time
-    task.reminder_minutes = reminder_minutes
+    task.reminder_time = reminder_time
+    task.reminder_minutes = None
+    if task.scheduled_time and task.reminder_time:
+        scheduled_minutes = int(task.scheduled_time[:2]) * 60 + int(task.scheduled_time[3:])
+        reminder_minutes = int(task.reminder_time[:2]) * 60 + int(task.reminder_time[3:])
+        task.reminder_minutes = max(scheduled_minutes - reminder_minutes, 0)
     db.flush()
     return task
 

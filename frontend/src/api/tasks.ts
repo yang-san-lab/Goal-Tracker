@@ -12,7 +12,7 @@ export async function checkinTask(data: TaskCheckin): Promise<Task> {
 
 export interface TaskScheduleUpdate {
   scheduled_time: string | null
-  reminder_minutes: number | null
+  reminder_time: string | null
 }
 
 export async function updateTaskSchedule(taskId: string, data: TaskScheduleUpdate): Promise<Task> {
