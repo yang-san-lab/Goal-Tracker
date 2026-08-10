@@ -1,6 +1,7 @@
 """任务服务 —— 每日任务查询、打卡、进度统计"""
 
 import logging
+import re
 from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
@@ -16,6 +17,17 @@ from app.services.reward_service import calculate_stars
 from app.events.event_bus import emit, Event, TASK_COMPLETED, TASK_DELAYED, TASK_SKIPPED
 
 logger = logging.getLogger(__name__)
+
+
+def can_act_on_task(task: Task, user_id: str) -> bool:
+    """当前用户是否可以处理该任务（自己未转交的任务，或已接受的分配任务）。"""
+    return (
+        task.user_id == user_id
+        and (task.assigned_to is None or task.assignment_status != "accepted")
+    ) or (
+        task.assigned_to == user_id
+        and task.assignment_status == "accepted"
+    )
 
 
 def _actionable_task_filter(user_id: str):
@@ -105,7 +117,12 @@ def get_daily_tasks(db: Session, user_id: str, target_date: Optional[date] = Non
             _actionable_task_filter(user_id),
             Task.scheduled_date == target_date,
         )
-        .order_by(Task.priority, Task.sort_order)
+        .order_by(
+            Task.scheduled_time.is_(None),
+            Task.scheduled_time,
+            Task.priority,
+            Task.sort_order,
+        )
         .all()
     )
 
@@ -178,14 +195,7 @@ def checkin_task(
     if not task:
         raise ValueError("任务不存在")
 
-    can_checkin = (
-        task.user_id == user_id
-        and (task.assigned_to is None or task.assignment_status != "accepted")
-    ) or (
-        task.assigned_to == user_id
-        and task.assignment_status == "accepted"
-    )
-    if not can_checkin:
+    if not can_act_on_task(task, user_id):
         raise ValueError("任务不存在或无权操作")
 
     if action == "completed":
@@ -236,6 +246,29 @@ def checkin_task(
     if check_delay_threshold(db, task.goal_id, user_id):
         logger.info(f"Goal {task.goal_id} 延期率超过阈值，建议触发 AI 重排")
 
+    return task
+
+
+def update_task_schedule(
+    db: Session,
+    user_id: str,
+    task_id: str,
+    scheduled_time: Optional[str] = None,
+    reminder_minutes: Optional[int] = None,
+) -> Task:
+    """更新任务的执行时间与提醒设置。"""
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task or not can_act_on_task(task, user_id):
+        raise ValueError("任务不存在或无权操作")
+
+    if scheduled_time is not None and not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", scheduled_time):
+        raise ValueError("时间格式应为 HH:MM")
+    if reminder_minutes is not None and (reminder_minutes < 0 or reminder_minutes > 1440):
+        raise ValueError("提醒时间无效")
+
+    task.scheduled_time = scheduled_time
+    task.reminder_minutes = reminder_minutes
+    db.flush()
     return task
 
 

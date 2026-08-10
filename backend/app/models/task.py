@@ -9,6 +9,8 @@ class Task(BaseModel):
 
     goal_id = Column(String(36), ForeignKey("goals.id"), nullable=False, index=True)
     user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    scheduled_time = Column(String(5), default=None)          # 计划执行时间 HH:MM
+    reminder_minutes = Column(Integer, default=None)          # 提前 N 分钟提醒；0=准时；None=不提醒
 
     title = Column(String(300), nullable=False)              # 任务标题，如"背30个考研单词"
     description = Column(Text, default="")                   # 详细说明

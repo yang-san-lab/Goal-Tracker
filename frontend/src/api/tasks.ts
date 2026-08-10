@@ -10,6 +10,15 @@ export async function checkinTask(data: TaskCheckin): Promise<Task> {
   return api.post<Task>('/tasks/checkin', data)
 }
 
+export interface TaskScheduleUpdate {
+  scheduled_time: string | null
+  reminder_minutes: number | null
+}
+
+export async function updateTaskSchedule(taskId: string, data: TaskScheduleUpdate): Promise<Task> {
+  return api.put<Task>(`/tasks/${taskId}`, data)
+}
+
 export async function getWeekProgress(weekStart?: string): Promise<WeekProgress> {
   const query = weekStart ? `?week_start=${weekStart}` : ''
   return api.get<WeekProgress>(`/tasks/week${query}`)

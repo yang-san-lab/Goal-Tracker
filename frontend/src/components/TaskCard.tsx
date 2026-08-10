@@ -5,6 +5,8 @@ interface Props {
   task: Task
   onCheckin: (taskId: string, action: 'completed' | 'delayed' | 'skipped') => void
   loading?: boolean
+  onUpdateSchedule?: (taskId: string, scheduledTime: string | null, reminderMinutes: number | null) => void | Promise<void>
+  scheduleSaving?: boolean
 }
 
 const statusColors: Record<string, string> = {
@@ -81,7 +83,7 @@ function StarBurst({ onDone }: { onDone: () => void }) {
   )
 }
 
-export default function TaskCard({ task, onCheckin, loading }: Props) {
+export default function TaskCard({ task, onCheckin, loading, onUpdateSchedule, scheduleSaving }: Props) {
   const isDone = task.status === 'completed'
   const isSkipped = task.status === 'skipped'
   const [showBurst, setShowBurst] = useState(false)
@@ -133,6 +135,33 @@ export default function TaskCard({ task, onCheckin, loading }: Props) {
           <p className={`font-medium ${isDone ? 'line-through text-gray-400' : 'text-gray-800'}`}>
             {task.title}
           </p>
+
+          {onUpdateSchedule && (
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <input
+                type="time"
+                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400"
+                value={task.scheduled_time ?? ''}
+                disabled={scheduleSaving}
+                onChange={e => onUpdateSchedule(task.id, e.target.value || null, task.reminder_minutes)}
+              />
+              <select
+                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400"
+                value={task.reminder_minutes == null ? '' : String(task.reminder_minutes)}
+                disabled={scheduleSaving}
+                onChange={e => onUpdateSchedule(task.id, task.scheduled_time, e.target.value === '' ? null : Number(e.target.value))}
+              >
+                <option value="">不提醒</option>
+                <option value="0">准时提醒</option>
+                <option value="5">提前5分钟</option>
+                <option value="10">提前10分钟</option>
+                <option value="15">提前15分钟</option>
+                <option value="30">提前30分钟</option>
+                <option value="60">提前1小时</option>
+                <option value="120">提前2小时</option>
+              </select>
+            </div>
+          )}
 
           {/* 目标名 */}
           {task.goal_title && (

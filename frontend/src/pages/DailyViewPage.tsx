@@ -1,8 +1,17 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useDailyTasks } from '../hooks/useTasks'
 import TaskCard from '../components/TaskCard'
 import ProgressBar from '../components/ProgressBar'
+import {
+  notificationsSupported,
+  notificationPermission,
+  enableNotifications,
+  syncTaskReminders,
+  startBadgeTicker,
+  stopBadgeTicker,
+  clearReminderTimers,
+} from '../lib/reminders'
 
 function formatDate(dateStr: string): string {
   try {
@@ -32,10 +41,12 @@ export default function DailyViewPage() {
   const { date } = useParams<{ date?: string }>()
   const navigate = useNavigate()
   const targetDate = date || getToday()
-  const { data, loading, error, refresh, checkin } = useDailyTasks(targetDate)
+  const { data, loading, error, refresh, checkin, updateSchedule } = useDailyTasks(targetDate)
 
   const [checkinNote, setCheckinNote] = useState('')
   const [checkinLoading, setCheckinLoading] = useState<string | null>(null)
+  const [scheduleSavingId, setScheduleSavingId] = useState<string | null>(null)
+  const [notifPermission, setNotifPermission] = useState(notificationPermission())
 
   // 日期导航
   const changeDate = (days: number) => {
@@ -58,6 +69,40 @@ export default function DailyViewPage() {
       setCheckinLoading(null)
     }
   }
+
+  const handleUpdateSchedule = async (
+    taskId: string,
+    scheduledTime: string | null,
+    reminderMinutes: number | null,
+  ) => {
+    setScheduleSavingId(taskId)
+    try {
+      await updateSchedule(taskId, scheduledTime, reminderMinutes)
+    } catch (err: any) {
+      alert('保存时间提醒失败: ' + err.message)
+    } finally {
+      setScheduleSavingId(null)
+    }
+  }
+
+  const handleEnableNotifications = async () => {
+    await enableNotifications()
+    setNotifPermission(notificationPermission())
+    if (data) {
+      syncTaskReminders(data.tasks)
+      startBadgeTicker(data.tasks)
+    }
+  }
+
+  useEffect(() => {
+    if (!data) return
+    syncTaskReminders(data.tasks)
+    startBadgeTicker(data.tasks)
+    return () => {
+      clearReminderTimers()
+      stopBadgeTicker()
+    }
+  }, [data, notifPermission])
 
   return (
     <div className="px-4 py-6 max-w-lg mx-auto">
@@ -114,6 +159,15 @@ export default function DailyViewPage() {
       )}
 
       {/* 任务列表 */}
+      {data && notificationsSupported() && notifPermission !== 'granted' && (
+        <button
+          onClick={handleEnableNotifications}
+          className="w-full mb-4 text-sm border border-primary-200 text-primary-600 bg-primary-50 rounded-xl py-2 font-medium hover:bg-primary-100"
+        >
+          🔔 开启桌面提醒
+        </button>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-20">
           <div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full" />
@@ -143,6 +197,8 @@ export default function DailyViewPage() {
               task={task}
               onCheckin={handleCheckin}
               loading={checkinLoading === task.id}
+              onUpdateSchedule={handleUpdateSchedule}
+              scheduleSaving={scheduleSavingId === task.id}
             />
           ))}
         </div>

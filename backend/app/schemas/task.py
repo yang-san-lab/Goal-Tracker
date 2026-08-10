@@ -13,6 +13,12 @@ class TaskCheckin(BaseModel):
     duration_actual: Optional[int] = Field(default=None, description="实际耗时（分钟）")
 
 
+class TaskUpdate(BaseModel):
+    """更新任务的执行时间与提醒"""
+    scheduled_time: Optional[str] = Field(default=None, description="执行时间 HH:MM，null 表示清除")
+    reminder_minutes: Optional[int] = Field(default=None, ge=0, le=1440, description="提前 N 分钟提醒；0 表示准时；null 表示不提醒")
+
+
 class TaskResponse(BaseModel):
     """任务详情"""
     id: str
@@ -26,6 +32,8 @@ class TaskResponse(BaseModel):
     category: str
     status: str
     completed_at: Optional[datetime] = None
+    scheduled_time: Optional[str] = None
+    reminder_minutes: Optional[int] = None
     delayed_reason: str
     user_note: str
     sort_order: int

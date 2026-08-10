@@ -11,10 +11,11 @@ from app.database import get_db
 from app.models.user import User
 from app.models.goal import Goal
 from app.routers.auth import get_current_user
-from app.schemas.task import TaskCheckin, TaskResponse, DailyTasksResponse, WeekProgress
+from app.schemas.task import TaskCheckin, TaskUpdate, TaskResponse, DailyTasksResponse, WeekProgress
 from app.services.task_service import (
     get_daily_tasks,
     checkin_task,
+    update_task_schedule,
     get_week_progress,
     get_overdue_tasks,
 )
@@ -86,6 +87,28 @@ def week_progress(
     parsed_start = date.fromisoformat(week_start) if week_start else None
     result = get_week_progress(db, current_user.id, parsed_start)
     return WeekProgress(**result)
+
+
+@router.put("/{task_id}", response_model=TaskResponse)
+def update_task(
+    task_id: str,
+    data: TaskUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """更新任务的执行时间与提醒设置"""
+    try:
+        task = update_task_schedule(
+            db=db,
+            user_id=current_user.id,
+            task_id=task_id,
+            scheduled_time=data.scheduled_time,
+            reminder_minutes=data.reminder_minutes,
+        )
+        db.commit()
+        return TaskResponse.model_validate(task)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/overdue", response_model=list[TaskResponse])

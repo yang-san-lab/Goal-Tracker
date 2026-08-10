@@ -81,6 +81,8 @@ export interface Task {
   category: string
   status: 'pending' | 'completed' | 'delayed' | 'skipped'
   completed_at: string | null
+  scheduled_time: string | null
+  reminder_minutes: number | null
   delayed_reason: string
   user_note: string
   sort_order: number

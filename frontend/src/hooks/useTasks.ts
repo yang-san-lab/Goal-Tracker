@@ -41,7 +41,23 @@ export function useDailyTasks(date?: string) {
     return updated
   }, [data])
 
-  return { data, loading, error, refresh, checkin }
+  const updateSchedule = useCallback(async (
+    taskId: string,
+    scheduledTime: string | null,
+    reminderMinutes: number | null,
+  ) => {
+    const updated = await tasksApi.updateTaskSchedule(taskId, {
+      scheduled_time: scheduledTime,
+      reminder_minutes: reminderMinutes,
+    })
+    setData(prev => prev ? {
+      ...prev,
+      tasks: prev.tasks.map(t => t.id === taskId ? updated : t),
+    } : prev)
+    return updated
+  }, [])
+
+  return { data, loading, error, refresh, checkin, updateSchedule }
 }
 
 export function useWeekProgress(weekStart?: string) {
