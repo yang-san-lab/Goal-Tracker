@@ -139,19 +139,48 @@ export default function TaskCard({ task, onCheckin, loading, onUpdateSchedule, s
           {onUpdateSchedule && (
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               <input
-                type="time"
-                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400"
+                type="text"
+                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400 w-16"
+                placeholder="HH:MM"
                 value={task.scheduled_time ?? ''}
                 disabled={scheduleSaving}
-                onChange={e => onUpdateSchedule(task.id, e.target.value || null, task.reminder_time)}
+                onChange={e => {
+                  const val = e.target.value
+                  onUpdateSchedule(task.id, val || null, task.reminder_time)
+                }}
               />
-              <input
-                type="time"
+              <select
                 className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400"
-                value={task.reminder_time ?? ''}
-                disabled={scheduleSaving}
-                onChange={e => onUpdateSchedule(task.id, task.scheduled_time, e.target.value || null)}
-              />
+                value={(() => {
+                  if (task.reminder_time == null || !task.scheduled_time) return ''
+                  const [sh, sm] = task.scheduled_time.split(':').map(Number)
+                  const [rh, rm] = task.reminder_time.split(':').map(Number)
+                  return String(Math.max((sh * 60 + sm) - (rh * 60 + rm), 0))
+                })()}
+                disabled={scheduleSaving || !task.scheduled_time}
+                onChange={e => {
+                  const val = e.target.value
+                  if (val === '' || !task.scheduled_time) {
+                    onUpdateSchedule(task.id, task.scheduled_time, null)
+                    return
+                  }
+                  const mins = Number(val)
+                  const [h, m] = task.scheduled_time.split(':').map(Number)
+                  const totalMin = (h * 60 + m - mins + 1440) % 1440
+                  const newHh = String(Math.floor(totalMin / 60)).padStart(2, '0')
+                  const newMm = String(totalMin % 60).padStart(2, '0')
+                  onUpdateSchedule(task.id, task.scheduled_time, `${newHh}:${newMm}`)
+                }}
+              >
+                <option value="">不提醒</option>
+                <option value="0">准时提醒</option>
+                <option value="5">提前5分钟</option>
+                <option value="10">提前10分钟</option>
+                <option value="15">提前15分钟</option>
+                <option value="30">提前30分钟</option>
+                <option value="60">提前1小时</option>
+                <option value="120">提前2小时</option>
+              </select>
             </div>
           )}
 
