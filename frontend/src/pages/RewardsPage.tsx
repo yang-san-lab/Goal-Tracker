@@ -24,7 +24,7 @@ export default function RewardsPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formName, setFormName] = useState('')
-  const [formCost, setFormCost] = useState(50)
+  const [formCost, setFormCost] = useState('50')
   const [formDesc, setFormDesc] = useState('')
   const [formIcon, setFormIcon] = useState('🎁')
   const [formSubmitting, setFormSubmitting] = useState(false)
@@ -56,7 +56,7 @@ export default function RewardsPage() {
   const openAddForm = () => {
     setEditingId(null)
     setFormName('')
-    setFormCost(50)
+    setFormCost('50')
     setFormDesc('')
     setFormIcon('🎁')
     setShowForm(true)
@@ -66,7 +66,7 @@ export default function RewardsPage() {
   const openEditForm = (r: CustomRewardItem) => {
     setEditingId(r.id)
     setFormName(r.name)
-    setFormCost(r.star_cost)
+    setFormCost(String(r.star_cost))
     setFormDesc(r.description)
     setFormIcon(r.icon)
     setShowForm(true)
@@ -75,21 +75,22 @@ export default function RewardsPage() {
   // 提交表单
   const handleFormSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!formName.trim() || formCost <= 0) return
+    const cost = parseInt(formCost, 10)
+    if (!formName.trim() || !Number.isFinite(cost) || cost <= 0) return
     setFormSubmitting(true)
     setError('')
     try {
       if (editingId) {
         await rewardsApi.updateReward(editingId, {
           name: formName.trim(),
-          star_cost: formCost,
+          star_cost: cost,
           description: formDesc,
           icon: formIcon,
         })
       } else {
         await rewardsApi.createReward({
           name: formName.trim(),
-          star_cost: formCost,
+          star_cost: cost,
           description: formDesc,
           icon: formIcon,
         })
@@ -245,7 +246,7 @@ export default function RewardsPage() {
                   type="number"
                   min={1}
                   value={formCost}
-                  onChange={e => setFormCost(parseInt(e.target.value) || 1)}
+                  onChange={e => setFormCost(e.target.value)}
                   required
                 />
               </div>
