@@ -69,7 +69,7 @@ def checkin(
             duration_minutes=task.duration_minutes,
             priority=task.priority,
             on_time=task.scheduled_date >= date_type.today(),
-        ) if task.status == "pending" else 0
+        ) if task.status in ("pending", "completed") else 0
 
         return TaskResponse.model_validate(task)
     except ValueError as e:

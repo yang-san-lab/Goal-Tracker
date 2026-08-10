@@ -41,8 +41,14 @@ def _next_available_date(
     return next_date if next_date <= end_date else None
 
 
-def handle_task_delayed(db: Session, task: Task, reason: str = "") -> Task:
+def handle_task_delayed(
+    db: Session,
+    task: Task,
+    reason: str = "",
+    user_id: Optional[str] = None,
+) -> Task:
     """处理任务延期：自动后移一天，记录日志，发射事件"""
+    acting_user = user_id or task.user_id
     old_date = task.scheduled_date
     new_date = task.scheduled_date + timedelta(days=1)
 
@@ -59,7 +65,7 @@ def handle_task_delayed(db: Session, task: Task, reason: str = "") -> Task:
     # 记录日志
     log = TaskLog(
         task_id=task.id,
-        user_id=task.user_id,
+        user_id=acting_user,
         action="delayed",
         old_scheduled_date=old_date,
         new_scheduled_date=new_date,
@@ -70,7 +76,7 @@ def handle_task_delayed(db: Session, task: Task, reason: str = "") -> Task:
     # 发射事件（预留：后续积分系统可监听扣分）
     emit(Event(TASK_DELAYED, {
         "task_id": task.id,
-        "user_id": task.user_id,
+        "user_id": acting_user,
         "old_date": str(old_date),
         "new_date": str(new_date),
         "reason": reason,

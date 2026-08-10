@@ -69,7 +69,9 @@ def create_goal_with_breakdown(
         goal.status = "active"  # 即使拆解失败，目标仍然创建
         goal.ai_breakdown = {"error": str(e)}
         db.flush()
-        raise
+        if isinstance(e, RuntimeError):
+            raise
+        raise RuntimeError(f"AI 拆解结果解析失败: {e}") from e
 
     db.flush()
     return goal
@@ -191,7 +193,9 @@ def trigger_adjustment(
         logger.error(f"AI 动态调整失败: {e}")
         adjustment.ai_output = {"error": str(e)}
         db.flush()
-        raise
+        if isinstance(e, RuntimeError):
+            raise
+        raise RuntimeError(f"AI 调整结果解析失败: {e}") from e
 
 
 def _apply_adjustments(db: Session, goal_id: str, user_id: str, ai_result: dict):

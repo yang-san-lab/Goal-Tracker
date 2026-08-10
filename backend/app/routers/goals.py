@@ -176,6 +176,7 @@ def request_adjustment(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
+        db.commit()
         raise HTTPException(status_code=500, detail=f"AI 调整失败: {e}")
 
 
@@ -222,6 +223,7 @@ def post_chat_message(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
+        db.commit()
         raise HTTPException(status_code=500, detail=f"AI 回复失败: {e}")
 
 

@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
 from app.models.task import Task, TaskLog
 from app.models.goal import Goal
@@ -18,13 +18,30 @@ from app.events.event_bus import emit, Event, TASK_COMPLETED, TASK_DELAYED, TASK
 logger = logging.getLogger(__name__)
 
 
+def _actionable_task_filter(user_id: str):
+    """某用户“要处理”的任务：自己的未转交任务 + 已接受的分配任务。"""
+    return or_(
+        and_(
+            Task.user_id == user_id,
+            or_(
+                Task.assigned_to.is_(None),
+                Task.assignment_status != "accepted",
+            ),
+        ),
+        and_(
+            Task.assigned_to == user_id,
+            Task.assignment_status == "accepted",
+        ),
+    )
+
+
 def auto_delay_overdue_tasks(db: Session, user_id: str) -> list[Task]:
     """自动将逾期的待办任务延后到最近可用日期"""
     today = date.today()
     overdue = (
         db.query(Task)
         .filter(
-            Task.user_id == user_id,
+            _actionable_task_filter(user_id),
             Task.scheduled_date < today,
             Task.status == "pending",
         )
@@ -85,7 +102,7 @@ def get_daily_tasks(db: Session, user_id: str, target_date: Optional[date] = Non
     tasks = (
         db.query(Task)
         .filter(
-            Task.user_id == user_id,
+            _actionable_task_filter(user_id),
             Task.scheduled_date == target_date,
         )
         .order_by(Task.priority, Task.sort_order)
@@ -124,7 +141,7 @@ def get_daily_tasks(db: Session, user_id: str, target_date: Optional[date] = Non
             duration_minutes=t.duration_minutes,
             priority=t.priority,
             on_time=t.scheduled_date >= date.today(),
-        ) if t.status == "pending" else 0
+        ) if t.status in ("pending", "completed") else 0
         # 团队字段
         t.assignee_name = ""
         t.assigned_by_username = assigner_map.get(t.assigned_by or "", "")
@@ -154,13 +171,22 @@ def checkin_task(
         note: 用户备注
         duration_actual: 实际耗时
     """
-    task = (
-        db.query(Task)
-        .filter(Task.id == task_id, Task.user_id == user_id)
-        .first()
-    )
+    if action not in {"completed", "delayed", "skipped"}:
+        raise ValueError("无效的打卡操作")
+
+    task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
         raise ValueError("任务不存在")
+
+    can_checkin = (
+        task.user_id == user_id
+        and (task.assigned_to is None or task.assignment_status != "accepted")
+    ) or (
+        task.assigned_to == user_id
+        and task.assignment_status == "accepted"
+    )
+    if not can_checkin:
+        raise ValueError("任务不存在或无权操作")
 
     if action == "completed":
         task.status = "completed"
@@ -184,7 +210,7 @@ def checkin_task(
         }))
 
     elif action == "delayed":
-        task = handle_task_delayed(db, task, reason=note)
+        task = handle_task_delayed(db, task, reason=note, user_id=user_id)
 
     elif action == "skipped":
         task.status = "skipped"
@@ -224,7 +250,7 @@ def get_week_progress(db: Session, user_id: str, week_start: Optional[date] = No
     tasks = (
         db.query(Task)
         .filter(
-            Task.user_id == user_id,
+            _actionable_task_filter(user_id),
             Task.scheduled_date >= week_start,
             Task.scheduled_date <= week_end,
         )
@@ -265,7 +291,7 @@ def get_overdue_tasks(db: Session, user_id: str) -> list[Task]:
     return (
         db.query(Task)
         .filter(
-            Task.user_id == user_id,
+            _actionable_task_filter(user_id),
             Task.scheduled_date < today,
             Task.status.in_(["pending", "delayed"]),
         )

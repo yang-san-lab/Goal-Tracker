@@ -333,8 +333,6 @@ def accept_task(db: Session, user_id: str, task_id: str) -> Task:
         raise ValueError("该任务不处于待接受状态")
 
     task.assignment_status = "accepted"
-    # 将任务的 user_id 改为被分配者，使其出现在每日视图
-    task.user_id = user_id
     db.flush()
     logger.info(f"User {user_id} accepted task {task_id}")
     return task
