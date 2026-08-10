@@ -243,9 +243,7 @@ export default function RewardsPage() {
                 <label className="text-xs text-gray-400">所需星星</label>
                 <input
                   className="input text-sm"
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
+                  type="tel"
                   maxLength={5}
                   value={formCost}
                   onChange={e => setFormCost(e.target.value.replace(/\D/g, '').slice(0, 5))}
