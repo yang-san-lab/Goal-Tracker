@@ -76,7 +76,7 @@ if [ -d "$APP_DIR/.git" ]; then
 else
     echo ""
     echo "开始克隆项目到 $APP_DIR ..."
-    git clone https://github.com/yang-san-lab/demo4.git "$APP_DIR"
+    git clone https://github.com/yang-san-lab/Goal-Tracker.git "$APP_DIR"
 fi
 cd "$APP_DIR"
 

@@ -100,7 +100,7 @@ ssh root@你的服务器IP
 SSH 登录服务器后，把下面的命令粘贴进去执行（会自动安装 Docker、拉取代码、配置环境、启动服务、配置 Nginx 和 HTTPS）：
 
 ```bash
-cd /opt && curl -fsSL https://raw.githubusercontent.com/yang-san-lab/demo4/main/deploy.sh -o deploy.sh && sudo bash deploy.sh
+cd /opt && curl -fsSL https://raw.githubusercontent.com/yang-san-lab/Goal-Tracker/main/deploy.sh -o deploy.sh && sudo bash deploy.sh
 ```
 
 过程中只需要回答两个问题：
@@ -127,7 +127,7 @@ curl -fsSL https://get.docker.com | sh
 #### 拉取代码
 
 ```bash
-git clone https://github.com/yang-san-lab/demo4.git /opt/goal-tracker
+git clone https://github.com/yang-san-lab/Goal-Tracker.git /opt/goal-tracker
 cd /opt/goal-tracker
 ```
 
